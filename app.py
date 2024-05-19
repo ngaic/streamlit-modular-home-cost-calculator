@@ -16,8 +16,32 @@ logistics_costs = {
 local_transport_cost_per_container_default = 10000
 crane_costs_default = 12000
 building_permit_costs = {
-    "2 bed": 14100,
-    "1 bed": 12900
+    "2 bed": {
+        "Architectural": 1700,
+        "BP Project management": 1000,
+        "Client Engagement": 500,
+        "Structural": 2000,
+        "Civil": 1000,
+        "Building Surveyor": 3500,
+        "Supporting doc(Title, Reg 52, LPOD, Consent)": 500,
+        "Land survey": 2700,
+        "Soil report": 550,
+        "VBA Application": 300,
+        "Energy Rating": 350,
+    },
+    "1 bed": {
+        "Architectural": 1500,
+        "BP Project management": 1000,
+        "Client Engagement": 500,
+        "Structural": 1000,
+        "Civil": 1000,
+        "Building Surveyor": 3500,
+        "Supporting doc(Title, Reg 52, LPOD, Consent)": 500,
+        "Land survey": 2700,
+        "Soil report": 550,
+        "VBA Application": 300,
+        "Energy Rating": 350,
+    }
 }
 cost_per_stump = 600
 fixed_civil_work_cost = 6000
@@ -138,21 +162,22 @@ else:
     on_site_electrical_connection = round(on_site_electrical_connection)
     currency_symbol = "$"
 
+# Size inputs
+sqm_1_bed = st.sidebar.number_input(translate("1_bed_size"), value=42)
+sqm_2_bed = st.sidebar.number_input(translate("2_bed_size"), value=58)
+
 # Input parameters
 sqm_price = st.sidebar.number_input(translate("price_per_sqm"), value=sqm_price)
 local_transport_cost_per_container = st.sidebar.number_input(translate("local_transport_cost"), value=local_transport_cost_per_container)
 crane_costs = st.sidebar.number_input(translate("crane_costs"), value=crane_costs)
 profit_margin = st.sidebar.number_input(translate("profit_margin"), value=round(profit_margin_default * 100)) / 100
 
-# Size inputs
-sqm_1_bed = st.sidebar.number_input(translate("1_bed_size"), value=42)
-sqm_2_bed = st.sidebar.number_input(translate("2_bed_size"), value=58)
-
 # Calculate costs
 def calculate_costs(option, sqm, containers, stumps):
     construction_cost = round(sqm * sqm_price)
     logistics_cost = round(sum(logistics_costs.values()) * containers + local_transport_cost_per_container * containers + crane_costs)
-    permit_cost = round(building_permit_costs[option] * (conversion_rate_AUD_to_CNY if language == "Simplified Chinese" else 1))
+    permit_cost_details = building_permit_costs[option]
+    permit_cost = round(sum(permit_cost_details.values()) * (conversion_rate_AUD_to_CNY if language == "Simplified Chinese" else 1))
     stump_cost = round(stumps * cost_per_stump)
     site_work_cost = round(site_work_base_costs + stump_cost)
     permit_license_cost = round(site_work_cost * 0.05)
@@ -167,6 +192,7 @@ def calculate_costs(option, sqm, containers, stumps):
         "construction_cost": construction_cost,
         "logistics_cost": logistics_cost,
         "permit_cost": permit_cost,
+        "permit_cost_details": permit_cost_details,
         "stump_cost": stump_cost,
         "site_work_cost": site_work_cost,
         "permit_license_cost": permit_license_cost,
@@ -205,7 +231,8 @@ with col1:
         st.write(f"{translate('local_transport')}: {currency_symbol}{local_transport_cost_per_container}")
         st.write(f"{translate('crane_costs')}: {currency_symbol}{crane_costs}")
     with st.expander(f"{translate('permit_costs')}: {currency_symbol}{costs_1_bed['permit_cost']}"):
-        st.write(f"{translate('permit_cost')}: {currency_symbol}{costs_1_bed['permit_cost']}")
+        for item, cost in costs_1_bed['permit_cost_details'].items():
+            st.write(f"{translate(item)}: {currency_symbol}{cost}")
     with st.expander(f"{translate('site_work_costs')}: {currency_symbol}{costs_1_bed['total_site_work_cost']}"):
         st.write(f"{translate('stump_cost')}: {currency_symbol}{costs_1_bed['stump_cost']}")
         st.write(f"{translate('fixed_civil_work_cost')}: {currency_symbol}{fixed_civil_work_cost}")
@@ -216,7 +243,7 @@ with col1:
     st.write(f"{translate('total_cost')}: {currency_symbol}{costs_1_bed['total_cost']}")
     st.write(f"{translate('profit')}: {currency_symbol}{costs_1_bed['profit']}")
     st.write(f"{translate('gst')}: {currency_symbol}{costs_1_bed['gst']}")
-    st.write(f"{translate('total_price')}: {currency_symbol}{costs_1_bed['total_price']}")
+    st.subheader(f"{translate('total_price')}: {currency_symbol}{costs_1_bed['total_price']}")
 
 with col2:
     st.subheader(f"{translate('2_bed_option')} ({sqm_2_bed} sqm)")
@@ -231,7 +258,8 @@ with col2:
         st.write(f"{translate('local_transport')}: {currency_symbol}{local_transport_cost_per_container}")
         st.write(f"{translate('crane_costs')}: {currency_symbol}{crane_costs}")
     with st.expander(f"{translate('permit_costs')}: {currency_symbol}{costs_2_bed['permit_cost']}"):
-        st.write(f"{translate('permit_cost')}: {currency_symbol}{costs_2_bed['permit_cost']}")
+        for item, cost in costs_2_bed['permit_cost_details'].items():
+            st.write(f"{translate(item)}: {currency_symbol}{cost}")
     with st.expander(f"{translate('site_work_costs')}: {currency_symbol}{costs_2_bed['total_site_work_cost']}"):
         st.write(f"{translate('stump_cost')}: {currency_symbol}{costs_2_bed['stump_cost']}")
         st.write(f"{translate('fixed_civil_work_cost')}: {currency_symbol}{fixed_civil_work_cost}")
@@ -242,7 +270,7 @@ with col2:
     st.write(f"{translate('total_cost')}: {currency_symbol}{costs_2_bed['total_cost']}")
     st.write(f"{translate('profit')}: {currency_symbol}{costs_2_bed['profit']}")
     st.write(f"{translate('gst')}: {currency_symbol}{costs_2_bed['gst']}")
-    st.write(f"{translate('total_price')}: {currency_symbol}{costs_2_bed['total_price']}")
+    st.subheader(f"{translate('total_price')}: {currency_symbol}{costs_2_bed['total_price']}")
 
 # Create dataframes for chart visualization
 data = {
