@@ -4,7 +4,7 @@ import plotly.express as px
 
 # Constants
 conversion_rate_CNY_to_AUD = 0.21  # Assuming 1 CNY = 0.21 AUD, adjust as needed
-conversion_rate_AUD_to_CNY = 1 / conversion_rate_CNY_to_AUD
+conversion_rate_AUD_to_CNY = 1/conversion_rate_CNY_to_AUD
 sqm_price_CNY = 4500
 sqm_price_AUD = sqm_price_CNY * conversion_rate_CNY_to_AUD
 logistics_costs = {
@@ -52,8 +52,8 @@ site_work_base_costs = fixed_civil_work_cost + on_site_plumbing_connection + on_
 
 # Define default values for profit margin, overhead percentage, and contingency percentage
 profit_margin_default = 0.3
-overhead_percentage_default = 0.0 # Default 0.12 
-contingency_percentage_default = 0 # Default 0.07
+overhead_percentage_default = 0.0  # Default 0.12
+contingency_percentage_default = 0  # Default 0.07
 
 # Translation dictionary
 translations = {
@@ -111,7 +111,7 @@ translations = {
         "Profit": "Profit",
         "overhead_cost": "Overhead Cost",
         "contingency_cost": "Contingency Cost",
-        "cost_breakdown": "Cost Breakdown"
+        "price_breakdown": "Price Breakdown"
     },
     "Simplified Chinese": {
         "language": "语言",
@@ -167,46 +167,31 @@ translations = {
         "Profit": "利润",
         "overhead_cost": "管理费用",
         "contingency_cost": "应急费用",
-        "cost_breakdown": "成本分解"
+        "price_breakdown": "总价分解"
     },
 }
 
+
 # Default language setting
 current_language_key = "Simplified Chinese"  # Default to Chinese
+language = current_language_key  # Initialize the language variable
+
+# Translation function
+def translate(key):
+    return translations.get(language, {}).get(key, key)
 
 # Sidebar language toggle based on current language key
 language = st.sidebar.selectbox(
-    "Language",
+    translate("language"),
     ["English", "Simplified Chinese"],
-    index=0 if current_language_key == "English" else 1  # Default to English
+    index=0 if current_language_key == "English" else 1  # Default to Chinese
 )
 
 # Update the current language key based on the selection
 current_language_key = language
 
-# Translation function
-def translate(key):
-    return translations.get(language, {}).get(key, key)
-
-# Sidebar inputs
-st.sidebar.title(translate("title"))
-
-# Language options
-language_options = {
-    "English": ["English", "Simplified Chinese"],
-    "Simplified Chinese": ["English", "简体中文"]
-}
-
-# Update language based on the selection
-if language == "简体中文":
-    language = "Simplified Chinese"
-
-# Translation function
-def translate(key):
-    return translations.get(language, {}).get(key, key)
-
 # Convert costs if Simplified Chinese is selected
-if language == "Simplified Chinese" or language == "简体中文":
+if language == "Simplified Chinese":
     sqm_price = round(sqm_price_AUD * conversion_rate_AUD_to_CNY)
     local_transport_cost_per_container = round(local_transport_cost_per_container_default * conversion_rate_AUD_to_CNY)
     crane_costs = round(crane_costs_default * conversion_rate_AUD_to_CNY)
@@ -225,6 +210,9 @@ else:
     on_site_electrical_connection = round(on_site_electrical_connection)
     currency_symbol = "$"
 
+# Sidebar inputs
+st.sidebar.title(translate("title"))
+
 # Input parameters
 sqm_price = st.sidebar.number_input(translate("price_per_sqm"), value=sqm_price)
 local_transport_cost_per_container = st.sidebar.number_input(translate("local_transport_cost"), value=local_transport_cost_per_container)
@@ -242,21 +230,25 @@ def calculate_costs(option, sqm, containers, stumps, target_profit_margin, overh
     construction_cost = round(sqm * sqm_price)
     
     # Calculate logistics cost
-    logistics_cost = round(sum(logistics_costs.values()) * containers + local_transport_cost_per_container * containers + crane_costs)
+    logistics_cost_items = {key: value * containers * (conversion_rate_AUD_to_CNY if language == "Simplified Chinese" else 1) for key, value in logistics_costs.items()}
+    logistics_cost = round(sum(logistics_cost_items.values()) + local_transport_cost_per_container * containers + crane_costs)
     
     # Get permit cost details and convert if necessary
     permit_cost_details = building_permit_costs[option]
-    if language == "Simplified Chinese" or language == "简体中文":
-        permit_cost_details = {item: round(cost * conversion_rate_AUD_to_CNY) for item, cost in permit_cost_details.items()}
-    
-    # Calculate permit cost
-    permit_cost = round(sum(permit_cost_details.values()))
+    permit_cost_items = {item: cost * (conversion_rate_AUD_to_CNY if language == "Simplified Chinese" else 1) for item, cost in permit_cost_details.items()}
+    permit_cost = round(sum(permit_cost_items.values()))
     
     # Calculate stump cost
     stump_cost = round(stumps * cost_per_stump)
     
     # Calculate site work cost
-    site_work_cost = round(site_work_base_costs + stump_cost)
+    site_work_cost_items = {
+        "fixed_civil_work_cost": fixed_civil_work_cost,
+        "on_site_plumbing_connection": on_site_plumbing_connection,
+        "on_site_electrical_connection": on_site_electrical_connection,
+        "stump_cost": stump_cost
+    }
+    site_work_cost = round(sum(site_work_cost_items.values()))
     
     # Calculate additional costs for permit license and insurance
     permit_license_cost = round(site_work_cost * 0.05)
@@ -287,10 +279,12 @@ def calculate_costs(option, sqm, containers, stumps, target_profit_margin, overh
     return {
         "construction_cost": construction_cost,
         "logistics_cost": logistics_cost,
+        "logistics_cost_items": logistics_cost_items,
         "permit_cost": permit_cost,
-        "permit_cost_details": permit_cost_details,
+        "permit_cost_items": permit_cost_items,
         "stump_cost": stump_cost,
         "site_work_cost": site_work_cost,
+        "site_work_cost_items": site_work_cost_items,
         "permit_license_cost": permit_license_cost,
         "insurance_cost": insurance_cost,
         "total_site_work_cost": total_site_work_cost,
@@ -302,6 +296,31 @@ def calculate_costs(option, sqm, containers, stumps, target_profit_margin, overh
         "total_price": total_price
     }
 
+def display_cost_details(costs, option_label, sqm, containers, stumps):
+    st.subheader(f"{option_label} ({sqm} sqm)")
+    with st.expander(f"{translate('construction_costs')}: {currency_symbol}{costs['construction_cost']}"):
+        st.write(f"{translate('construction_cost')}: {currency_symbol}{costs['construction_cost']}")
+    with st.expander(f"{translate('logistics_costs')}: {currency_symbol}{costs['logistics_cost']}"):
+        for item, cost in costs['logistics_cost_items'].items():
+            st.write(f"{translate(item.lower())}: {currency_symbol}{round(cost)}")
+        st.write(f"{translate('local_transport')}: {currency_symbol}{local_transport_cost_per_container * containers}")
+        st.write(f"{translate('crane_costs')}: {currency_symbol}{crane_costs}")
+    with st.expander(f"{translate('permit_costs')}: {currency_symbol}{costs['permit_cost']}"):
+        for item, cost in costs['permit_cost_items'].items():
+            st.write(f"{translate(item)}: {currency_symbol}{round(cost)}")
+    with st.expander(f"{translate('site_work_costs')}: {currency_symbol}{costs['total_site_work_cost']}"):
+        for item, cost in costs['site_work_cost_items'].items():
+            st.write(f"{translate(item)}: {currency_symbol}{cost}")
+        st.write(f"{translate('building_permit_license')}: {currency_symbol}{costs['permit_license_cost']}")
+        st.write(f"{translate('domestic_building_insurance')}: {currency_symbol}{costs['insurance_cost']}")
+    with st.expander(f"{translate('overhead_cost')}: {currency_symbol}{costs['overhead_cost']}"):
+        st.write(f"{translate('overhead_cost')}: {currency_symbol}{costs['overhead_cost']}")
+    with st.expander(f"{translate('contingency_cost')}: {currency_symbol}{costs['contingency_cost']}"):
+        st.write(f"{translate('contingency_cost')}: {currency_symbol}{costs['contingency_cost']}")
+    st.write(f"{translate('total_cost')}: {currency_symbol}{costs['total_cost']}")
+    st.write(f"{translate('profit')}: {currency_symbol}{costs['profit']}")
+    st.write(f"{translate('gst')}: {currency_symbol}{costs['gst']}")
+    st.write(f"{translate('total_price')}: {currency_symbol}{costs['total_price']}")
 
 # 1 Bed Option
 containers_1_bed = 1
@@ -318,66 +337,10 @@ st.title(translate("title"))
 
 col1, col2 = st.columns(2)
 with col1:
-    st.subheader(f"{translate('1_bed_option')} ({sqm_1_bed} sqm)")
-    with st.expander(f"{translate('construction_costs')}: {currency_symbol}{costs_1_bed['construction_cost']}"):
-        st.write(f"{translate('construction_cost')}: {currency_symbol}{costs_1_bed['construction_cost']}")
-    with st.expander(f"{translate('logistics_costs')}: {currency_symbol}{costs_1_bed['logistics_cost']}"):
-        st.write(f"{translate('shipping')}: {currency_symbol}{round(logistics_costs['Shipping'] * containers_1_bed * (conversion_rate_AUD_to_CNY if language == 'Simplified Chinese' else 1))}")
-        st.write(f"{translate('transport')}: {currency_symbol}{round(logistics_costs['Transport'] * containers_1_bed * (conversion_rate_AUD_to_CNY if language == 'Simplified Chinese' else 1))}")
-        st.write(f"{translate('secure')}: {currency_symbol}{round(logistics_costs['Secure'] * containers_1_bed * (conversion_rate_AUD_to_CNY if language == 'Simplified Chinese' else 1))}")
-        st.write(f"{translate('custom')}: {currency_symbol}{round(logistics_costs['Custom'] * containers_1_bed * (conversion_rate_AUD_to_CNY if language == 'Simplified Chinese' else 1))}")
-        st.write(f"{translate('port_admin')}: {currency_symbol}{round(logistics_costs['Port admin'] * containers_1_bed * (conversion_rate_AUD_to_CNY if language == 'Simplified Chinese' else 1))}")
-        st.write(f"{translate('local_transport')}: {currency_symbol}{local_transport_cost_per_container * containers_1_bed}")
-        st.write(f"{translate('crane_costs')}: {currency_symbol}{crane_costs}")
-    with st.expander(f"{translate('permit_costs')}: {currency_symbol}{costs_1_bed['permit_cost']}"):
-        for item, cost in costs_1_bed['permit_cost_details'].items():
-            st.write(f"{translate(item)}: {currency_symbol}{cost}")
-    with st.expander(f"{translate('site_work_costs')}: {currency_symbol}{costs_1_bed['total_site_work_cost']}"):
-        st.write(f"{translate('stump_cost')}: {currency_symbol}{costs_1_bed['stump_cost']}")
-        st.write(f"{translate('fixed_civil_work_cost')}: {currency_symbol}{fixed_civil_work_cost}")
-        st.write(f"{translate('on_site_plumbing_connection')}: {currency_symbol}{on_site_plumbing_connection}")
-        st.write(f"{translate('on_site_electrical_connection')}: {currency_symbol}{on_site_electrical_connection}")
-        st.write(f"{translate('building_permit_license')}: {currency_symbol}{costs_1_bed['permit_license_cost']}")
-        st.write(f"{translate('domestic_building_insurance')}: {currency_symbol}{costs_1_bed['insurance_cost']}")
-    with st.expander(f"{translate('overhead_cost')}: {currency_symbol}{costs_1_bed['overhead_cost']}"):
-        st.write(f"{translate('overhead_cost')}: {currency_symbol}{costs_1_bed['overhead_cost']}")
-    with st.expander(f"{translate('contingency_cost')}: {currency_symbol}{costs_1_bed['contingency_cost']}"):
-        st.write(f"{translate('contingency_cost')}: {currency_symbol}{costs_1_bed['contingency_cost']}")
-    st.write(f"{translate('total_cost')}: {currency_symbol}{costs_1_bed['total_cost']}")
-    st.write(f"{translate('profit')}: {currency_symbol}{costs_1_bed['profit']}")
-    st.write(f"{translate('gst')}: {currency_symbol}{costs_1_bed['gst']}")
-    st.write(f"{translate('total_price')}: {currency_symbol}{costs_1_bed['total_price']}")
+    display_cost_details(costs_1_bed, translate("1_bed_option"), sqm_1_bed, containers_1_bed, stumps_1_bed)
 
 with col2:
-    st.subheader(f"{translate('2_bed_option')} ({sqm_2_bed} sqm)")
-    with st.expander(f"{translate('construction_costs')}: {currency_symbol}{costs_2_bed['construction_cost']}"):
-        st.write(f"{translate('construction_cost')}: {currency_symbol}{costs_2_bed['construction_cost']}")
-    with st.expander(f"{translate('logistics_costs')}: {currency_symbol}{costs_2_bed['logistics_cost']}"):
-        st.write(f"{translate('shipping')}: {currency_symbol}{round(logistics_costs['Shipping'] * containers_2_bed * (conversion_rate_AUD_to_CNY if language == 'Simplified Chinese' else 1))}")
-        st.write(f"{translate('transport')}: {currency_symbol}{round(logistics_costs['Transport'] * containers_2_bed * (conversion_rate_AUD_to_CNY if language == 'Simplified Chinese' else 1))}")
-        st.write(f"{translate('secure')}: {currency_symbol}{round(logistics_costs['Secure'] * containers_2_bed * (conversion_rate_AUD_to_CNY if language == 'Simplified Chinese' else 1))}")
-        st.write(f"{translate('custom')}: {currency_symbol}{round(logistics_costs['Custom'] * containers_2_bed * (conversion_rate_AUD_to_CNY if language == 'Simplified Chinese' else 1))}")
-        st.write(f"{translate('port_admin')}: {currency_symbol}{round(logistics_costs['Port admin'] * containers_2_bed * (conversion_rate_AUD_to_CNY if language == 'Simplified Chinese' else 1))}")
-        st.write(f"{translate('local_transport')}: {currency_symbol}{local_transport_cost_per_container * containers_2_bed}")
-        st.write(f"{translate('crane_costs')}: {currency_symbol}{crane_costs}")
-    with st.expander(f"{translate('permit_costs')}: {currency_symbol}{costs_2_bed['permit_cost']}"):
-        for item, cost in costs_2_bed['permit_cost_details'].items():
-            st.write(f"{translate(item)}: {currency_symbol}{cost}")
-    with st.expander(f"{translate('site_work_costs')}: {currency_symbol}{costs_2_bed['total_site_work_cost']}"):
-        st.write(f"{translate('stump_cost')}: {currency_symbol}{costs_2_bed['stump_cost']}")
-        st.write(f"{translate('fixed_civil_work_cost')}: {currency_symbol}{fixed_civil_work_cost}")
-        st.write(f"{translate('on_site_plumbing_connection')}: {currency_symbol}{on_site_plumbing_connection}")
-        st.write(f"{translate('on_site_electrical_connection')}: {currency_symbol}{on_site_electrical_connection}")
-        st.write(f"{translate('building_permit_license')}: {currency_symbol}{costs_2_bed['permit_license_cost']}")
-        st.write(f"{translate('domestic_building_insurance')}: {currency_symbol}{costs_2_bed['insurance_cost']}")
-    with st.expander(f"{translate('overhead_cost')}: {currency_symbol}{costs_2_bed['overhead_cost']}"):
-        st.write(f"{translate('overhead_cost')}: {currency_symbol}{costs_2_bed['overhead_cost']}")
-    with st.expander(f"{translate('contingency_cost')}: {currency_symbol}{costs_2_bed['contingency_cost']}"):
-        st.write(f"{translate('contingency_cost')}: {currency_symbol}{costs_2_bed['contingency_cost']}")
-    st.write(f"{translate('total_cost')}: {currency_symbol}{costs_2_bed['total_cost']}")
-    st.write(f"{translate('profit')}: {currency_symbol}{costs_2_bed['profit']}")
-    st.write(f"{translate('gst')}: {currency_symbol}{costs_2_bed['gst']}")
-    st.write(f"{translate('total_price')}: {currency_symbol}{costs_2_bed['total_price']}")
+    display_cost_details(costs_2_bed, translate("2_bed_option"), sqm_2_bed, containers_2_bed, stumps_2_bed)
 
 # Define colour map
 color_map = {
@@ -386,15 +349,14 @@ color_map = {
     translate("Permit"): 'rgb(75, 192, 192)',        # Teal
     translate("Site Work"): 'rgb(153, 102, 255)',    # Purple
     translate("Profit"): 'rgb(255, 206, 86)',        # Yellow
-    translate("Overhead Cost"): 'rgb(201, 203, 207)',# Light Grey
-    translate("Contingency Cost"): 'rgb(255, 159, 64)', # Orange
+    translate("overhead_cost"): 'rgb(201, 203, 207)',# Light Grey
+    translate("contingency_cost"): 'rgb(255, 159, 64)', # Orange
+    translate("gst"): 'rgb(0, 128, 0)', # Green
 }
 
-
-# Create dataframes for chart visualization with translated cost types and options
 # Prepare data for Plotly
 data = {
-    "Cost Type": [translate("Construction"), translate("Logistics"), translate("Permit"), translate("Site Work"), translate("overhead_cost"), translate("contingency_cost"), translate("Profit")],
+    "Cost Type": [translate("Construction"), translate("Logistics"), translate("Permit"), translate("Site Work"), translate("overhead_cost"), translate("contingency_cost"), translate("Profit"), translate("gst")],
     translate("1_bed_option"): [
         costs_1_bed['construction_cost'],
         costs_1_bed['logistics_cost'],
@@ -403,6 +365,7 @@ data = {
         costs_1_bed['overhead_cost'],
         costs_1_bed['contingency_cost'],
         costs_1_bed['profit'],
+        costs_1_bed['gst']
     ],
     translate("2_bed_option"): [
         costs_2_bed['construction_cost'],
@@ -412,6 +375,7 @@ data = {
         costs_2_bed['overhead_cost'],
         costs_2_bed['contingency_cost'],
         costs_2_bed['profit'],
+        costs_2_bed['gst']
     ],
 }
 
@@ -435,15 +399,14 @@ fig_bar = px.bar(df_long, x="Option", y="Cost", color="Cost Type",
 # Display the Plotly bar chart in Streamlit
 st.plotly_chart(fig_bar, use_container_width=True)
 
-
 # Pie chart for 1 Bed Option
 fig_1_bed = px.pie(df, names="Cost Type", values=translate("1_bed_option"), 
-                   title=f"{translate('1_bed_option')} ({sqm_1_bed} sqm) - {translate('cost_breakdown')}",
+                   title=f"{translate('1_bed_option')} ({sqm_1_bed} sqm) - {translate('price_breakdown')}",
                    color="Cost Type", color_discrete_map=color_map)
 
 # Pie chart for 2 Bed Option
 fig_2_bed = px.pie(df, names="Cost Type", values=translate("2_bed_option"), 
-                   title=f"{translate('2_bed_option')} ({sqm_2_bed} sqm) - {translate('cost_breakdown')}",
+                   title=f"{translate('2_bed_option')} ({sqm_2_bed} sqm) - {translate('price_breakdown')}",
                    color="Cost Type", color_discrete_map=color_map)
 
 # Display the pie charts in Streamlit
