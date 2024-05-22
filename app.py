@@ -402,7 +402,7 @@ fig_bar = px.bar(df_long, x="Option", y="Cost", color="Cost Type",
                  title=translate("title"),
                  labels={
                      "Option": translate("Option"),
-                     "Cost": translate("Cost (in AUD)"),
+                     "Cost": translate("Cost"),
                      "Cost Type": translate("Cost Type")
                  },
                  color_discrete_map=color_map,
