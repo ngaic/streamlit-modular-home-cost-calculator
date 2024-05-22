@@ -5,7 +5,7 @@ import plotly.express as px
 # Constants
 conversion_rate_CNY_to_AUD = 0.21  # Assuming 1 CNY = 0.21 AUD, adjust as needed
 conversion_rate_AUD_to_CNY = 1/conversion_rate_CNY_to_AUD
-sqm_price_CNY = 5000
+sqm_price_CNY = 4500
 sqm_price_AUD = sqm_price_CNY * conversion_rate_CNY_to_AUD
 china_logistics_costs = {
     "china_shipping": 11920,
