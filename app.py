@@ -5,16 +5,16 @@ import plotly.express as px
 # Constants
 conversion_rate_CNY_to_AUD = 0.21  # Assuming 1 CNY = 0.21 AUD, adjust as needed
 conversion_rate_AUD_to_CNY = 1/conversion_rate_CNY_to_AUD
-sqm_price_CNY = 4500
+sqm_price_CNY = 5000
 sqm_price_AUD = sqm_price_CNY * conversion_rate_CNY_to_AUD
-logistics_costs = {
-    "Shipping": 11920,
-    "Transport": 780,
-    "Secure": 460,
-    "Custom": 60,
-    "Port admin": 30,
+china_logistics_costs = {
+    "china_shipping": 11920,
+    "china_transport": 780,
+    "china_security": 460,
+    "china_custom": 60,
+    "china_port_admin": 30,
 }
-local_transport_cost_per_container_default = 10000
+australia_local_transport_cost_per_container_default = 10000
 crane_costs_default = 12000
 building_permit_costs = {
     "2 bed": {
@@ -45,15 +45,15 @@ building_permit_costs = {
     }
 }
 cost_per_stump = 600
-fixed_civil_work_cost = 6000
+civil_work_cost = 6000
 on_site_plumbing_connection = 2500
 on_site_electrical_connection = 2500
-site_work_base_costs = fixed_civil_work_cost + on_site_plumbing_connection + on_site_electrical_connection
+site_work_base_costs = civil_work_cost + on_site_plumbing_connection + on_site_electrical_connection
 
 # Define default values for profit margin, overhead percentage, and contingency percentage
-profit_margin_default = 0.3
+profit_margin_default = 0.25
 overhead_percentage_default = 0.0  # Default 0.12
-contingency_percentage_default = 0  # Default 0.07
+contingency_percentage_default = 0.05  # Default 0.07
 
 # Translation dictionary
 translations = {
@@ -61,8 +61,7 @@ translations = {
         "language": "Language",
         "title": "Modular Home Cost Evaluation",
         "price_per_sqm": "Price per Square Meter (in AUD)",
-        "local_transport_cost": "Local Transport Cost per Container (in AUD)",
-        "crane_costs": "Crane Costs (in AUD)",
+        "australia_local_transport_cost_per_container": "Local Transport Cost per Container",
         "profit_margin": "Profit Margin (%)",
         "overhead_percentage": "Overhead Percentage (%)",
         "contingency_percentage": "Contingency Percentage (%)",
@@ -70,21 +69,20 @@ translations = {
         "2_bed_size": "2 Bed Option Size (sqm)",
         "1_bed_option": "1 Bed Option",
         "2_bed_option": "2 Bed Option",
-        "construction_costs": "Construction Costs",
+        "manufacturing_costs": "Manufacturing Costs",
         "logistics_costs": "Logistics Costs",
         "permit_costs": "Permit Costs",
         "site_work_costs": "Site Work Costs",
-        "construction_cost": "Construction Cost",
-        "shipping": "Shipping",
-        "transport": "Transport",
-        "secure": "Secure",
-        "custom": "Custom",
-        "port_admin": "Port admin",
-        "local_transport": "Local Transport",
+        "china_shipping": "China Shipping",
+        "china_transport": "China Transport",
+        "china_security": "China Security",
+        "china_custom": "China custom",
+        "china_port_admin": "China port admin",
+        "australia_local_transport": "Australia Local Transport",
         "crane_costs": "Crane Costs",
         "permit_cost": "Permit Cost",
         "stump_cost": "Stump Cost",
-        "fixed_civil_work_cost": "Fixed Civil Work Cost",
+        "civil_work_cost": "Civil Work Cost",
         "on_site_plumbing_connection": "On-site Plumbing Connection",
         "on_site_electrical_connection": "On-site Electrical Connection",
         "building_permit_license": "Building Permit License",
@@ -104,21 +102,21 @@ translations = {
         "Soil report": "Soil report",
         "VBA Application": "VBA Application",
         "Energy Rating": "Energy Rating",
-        "Construction": "Construction",
+        "Manufacturing ": "Manufacturing ",
         "Logistics": "Logistics",
         "Permit": "Permit",
         "Site Work": "Site Work",
         "Profit": "Profit",
-        "overhead_cost": "Overhead Cost",
-        "contingency_cost": "Contingency Cost",
-        "price_breakdown": "Price Breakdown"
+        "overhead_cost": "Overhead",
+        "contingency_cost": "Contingency",
+        "price_breakdown": "Price Breakdown",
+        "Floor plan for": "Floor plan for"
     },
     "Simplified Chinese": {
         "language": "语言",
         "title": "模块化住宅成本评估",
         "price_per_sqm": "每平方米价格（人民币）",
-        "local_transport_cost": "每个集装箱的本地运输费用（人民币）",
-        "crane_costs": "起重机费用（人民币）",
+        "australia_local_transport_cost_per_container": "每个集装箱的澳洲本地运输费用",
         "profit_margin": "利润率 (%)",
         "overhead_percentage": "管理费用百分比 (%)",
         "contingency_percentage": "应急费用百分比 (%)",
@@ -126,21 +124,20 @@ translations = {
         "2_bed_size": "两居室选项大小（平方米）",
         "1_bed_option": "一居室选项",
         "2_bed_option": "两居室选项",
-        "construction_costs": "建筑成本",
+        "manufacturing_costs": "生产成本",
         "logistics_costs": "物流成本",
         "permit_costs": "许可证费用",
         "site_work_costs": "现场工作成本",
-        "construction_cost": "建筑成本",
-        "shipping": "运输",
-        "transport": "交通",
-        "secure": "安全",
-        "custom": "海关",
-        "port_admin": "港口管理",
-        "local_transport": "本地运输",
-        "crane_costs": "起重机费用（人民币）",
+        "china_shipping": "中国船运",
+        "china_transport": "中国陆运",
+        "china_security": "中国安保",
+        "china_custom": "中国海关",
+        "china_port_admin": "中国港口行政",
+        "australia_local_transport": "澳洲本地运输",
+        "crane_costs": "澳洲起重机费用",
         "permit_cost": "许可证费用",
-        "stump_cost": "桩成本",
-        "fixed_civil_work_cost": "固定土建成本",
+        "stump_cost": "地桩成本",
+        "civil_work_cost": "土建成本",
         "on_site_plumbing_connection": "现场管道连接",
         "on_site_electrical_connection": "现场电气连接",
         "building_permit_license": "建筑许可证",
@@ -155,19 +152,20 @@ translations = {
         "Structural": "结构",
         "Civil": "土木",
         "Building Surveyor": "建筑测量员",
-        "Supporting doc(Title, Reg 52, LPOD, Consent)": "支持文件(标题, 第52条法规, LPOD, 同意)",
+        "Supporting doc(Title, Reg 52, LPOD, Consent)": "支持文件(产权, 第52条法规, LPOD, 同意)",
         "Land survey": "土地测量",
         "Soil report": "土壤报告",
         "VBA Application": "VBA申请",
         "Energy Rating": "能效评级",
-        "Construction": "建筑",
+        "Manufacturing ": "生产",
         "Logistics": "物流",
         "Permit": "许可证",
         "Site Work": "现场工作",
         "Profit": "利润",
         "overhead_cost": "管理费用",
         "contingency_cost": "应急费用",
-        "price_breakdown": "总价分解"
+        "price_breakdown": "总价分解",
+        "Floor plan for": "平面图为"
     },
 }
 
@@ -193,19 +191,19 @@ current_language_key = language
 # Convert costs if Simplified Chinese is selected
 if language == "Simplified Chinese":
     sqm_price = round(sqm_price_AUD * conversion_rate_AUD_to_CNY)
-    local_transport_cost_per_container = round(local_transport_cost_per_container_default * conversion_rate_AUD_to_CNY)
+    australia_local_transport_cost_per_container = round(australia_local_transport_cost_per_container_default * conversion_rate_AUD_to_CNY)
     crane_costs = round(crane_costs_default * conversion_rate_AUD_to_CNY)
     cost_per_stump = round(cost_per_stump * conversion_rate_AUD_to_CNY)
-    fixed_civil_work_cost = round(fixed_civil_work_cost * conversion_rate_AUD_to_CNY)
+    civil_work_cost = round(civil_work_cost * conversion_rate_AUD_to_CNY)
     on_site_plumbing_connection = round(on_site_plumbing_connection * conversion_rate_AUD_to_CNY)
     on_site_electrical_connection = round(on_site_electrical_connection * conversion_rate_AUD_to_CNY)
     currency_symbol = "¥"
 else:
     sqm_price = round(sqm_price_AUD)
-    local_transport_cost_per_container = round(local_transport_cost_per_container_default)
+    australia_local_transport_cost_per_container = round(australia_local_transport_cost_per_container_default)
     crane_costs = round(crane_costs_default)
     cost_per_stump = round(cost_per_stump)
-    fixed_civil_work_cost = round(fixed_civil_work_cost)
+    civil_work_cost = round(civil_work_cost)
     on_site_plumbing_connection = round(on_site_plumbing_connection)
     on_site_electrical_connection = round(on_site_electrical_connection)
     currency_symbol = "$"
@@ -215,23 +213,25 @@ st.sidebar.title(translate("title"))
 
 # Input parameters
 sqm_price = st.sidebar.number_input(translate("price_per_sqm"), value=sqm_price)
-local_transport_cost_per_container = st.sidebar.number_input(translate("local_transport_cost"), value=local_transport_cost_per_container)
-crane_costs = st.sidebar.number_input(translate("crane_costs"), value=crane_costs)
-profit_margin = st.sidebar.number_input(translate("profit_margin"), value=round(profit_margin_default * 100)) / 100
-overhead_percentage = st.sidebar.number_input(translate("overhead_percentage"), value=round(overhead_percentage_default * 100)) / 100
-contingency_percentage = st.sidebar.number_input(translate("contingency_percentage"), value=round(contingency_percentage_default * 100)) / 100
-
 # Size inputs
-sqm_1_bed = st.sidebar.number_input(translate("1_bed_size"), value=42)
+sqm_1_bed = st.sidebar.number_input(translate("1_bed_size"), value=38)
 sqm_2_bed = st.sidebar.number_input(translate("2_bed_size"), value=58)
 
+
+australia_local_transport_cost_per_container = st.sidebar.number_input(translate("australia_local_transport_cost_per_container"), value=australia_local_transport_cost_per_container)
+crane_costs = st.sidebar.number_input(translate("crane_costs"), value=crane_costs)
+profit_margin = st.sidebar.slider(translate("profit_margin"), value=round(profit_margin_default * 100)) / 100
+overhead_percentage = st.sidebar.slider(translate("overhead_percentage"), value=round(overhead_percentage_default * 100)) / 100
+contingency_percentage = st.sidebar.slider(translate("contingency_percentage"), value=round(contingency_percentage_default * 100)) / 100
+
+
 def calculate_costs(option, sqm, containers, stumps, target_profit_margin, overhead_percentage, contingency_percentage):
-    # Calculate construction cost
-    construction_cost = round(sqm * sqm_price)
+    # Calculate manufacturing cost
+    manufacturing_costs = round(sqm * sqm_price)
     
     # Calculate logistics cost
-    logistics_cost_items = {key: value * containers * (conversion_rate_AUD_to_CNY if language == "Simplified Chinese" else 1) for key, value in logistics_costs.items()}
-    logistics_cost = round(sum(logistics_cost_items.values()) + local_transport_cost_per_container * containers + crane_costs)
+    china_logistics_cost_items = {key: value * containers * (conversion_rate_AUD_to_CNY if language == "Simplified Chinese" else 1) for key, value in china_logistics_costs.items()}
+    logistics_cost = round(sum(china_logistics_cost_items.values()) + australia_local_transport_cost_per_container * containers + crane_costs)
     
     # Get permit cost details and convert if necessary
     permit_cost_details = building_permit_costs[option]
@@ -243,7 +243,7 @@ def calculate_costs(option, sqm, containers, stumps, target_profit_margin, overh
     
     # Calculate site work cost
     site_work_cost_items = {
-        "fixed_civil_work_cost": fixed_civil_work_cost,
+        "civil_work_cost": civil_work_cost,
         "on_site_plumbing_connection": on_site_plumbing_connection,
         "on_site_electrical_connection": on_site_electrical_connection,
         "stump_cost": stump_cost
@@ -251,18 +251,18 @@ def calculate_costs(option, sqm, containers, stumps, target_profit_margin, overh
     site_work_cost = round(sum(site_work_cost_items.values()))
     
     # Calculate additional costs for permit license and insurance
-    permit_license_cost = round(site_work_cost * 0.05)
-    insurance_cost = round(site_work_cost * 0.008)
+    permit_license_cost = round((site_work_cost + manufacturing_costs + crane_costs) * 0.05)
+    insurance_cost = round((site_work_cost + manufacturing_costs + crane_costs) * 0.008)
     total_site_work_cost = round(site_work_cost + permit_license_cost + insurance_cost)
     
     # Calculate overhead costs
-    overhead_cost = round((construction_cost + logistics_cost + permit_cost + total_site_work_cost) * overhead_percentage)
+    overhead_cost = round((manufacturing_costs + logistics_cost + permit_cost + total_site_work_cost) * overhead_percentage)
     
     # Calculate contingency costs
-    contingency_cost = round((construction_cost + logistics_cost + permit_cost + total_site_work_cost) * contingency_percentage)
+    contingency_cost = round((manufacturing_costs + logistics_cost + permit_cost + total_site_work_cost) * contingency_percentage)
     
     # Calculate total cost without profit
-    total_cost_without_profit = round(construction_cost + logistics_cost + permit_cost + total_site_work_cost + overhead_cost + contingency_cost)
+    total_cost_without_profit = round(manufacturing_costs + logistics_cost + permit_cost + total_site_work_cost + overhead_cost + contingency_cost)
     
     # Adjust profit calculation to ensure profit margin is applied correctly
     profit = round(total_cost_without_profit * target_profit_margin / (1 - target_profit_margin))
@@ -277,9 +277,9 @@ def calculate_costs(option, sqm, containers, stumps, target_profit_margin, overh
     total_price = round(total_cost_with_profit + gst)
     
     return {
-        "construction_cost": construction_cost,
+        "manufacturing_costs": manufacturing_costs,
         "logistics_cost": logistics_cost,
-        "logistics_cost_items": logistics_cost_items,
+        "china_logistics_cost_items": china_logistics_cost_items,
         "permit_cost": permit_cost,
         "permit_cost_items": permit_cost_items,
         "stump_cost": stump_cost,
@@ -296,14 +296,17 @@ def calculate_costs(option, sqm, containers, stumps, target_profit_margin, overh
         "total_price": total_price
     }
 
-def display_cost_details(costs, option_label, sqm, containers, stumps):
+def display_cost_details(costs, option_label, sqm, containers, image_path):
     st.subheader(f"{option_label} ({sqm} sqm)")
-    with st.expander(f"{translate('construction_costs')}: {currency_symbol}{costs['construction_cost']}"):
-        st.write(f"{translate('construction_cost')}: {currency_symbol}{costs['construction_cost']}")
+    # Display the specific image for the option
+    translated_caption = translate("Floor plan for") + " " + option_label  # Assuming you have the translation for 'Floor plan for' in your dictionary
+    st.image(image_path, use_column_width=True, caption=translated_caption, output_format='auto')
+    with st.expander(f"{translate('manufacturing_costs')}: {currency_symbol}{costs['manufacturing_costs']}"):
+        st.write(f"{translate('manufacturing_costs')}: {currency_symbol}{costs['manufacturing_costs']}")
     with st.expander(f"{translate('logistics_costs')}: {currency_symbol}{costs['logistics_cost']}"):
-        for item, cost in costs['logistics_cost_items'].items():
+        for item, cost in costs['china_logistics_cost_items'].items():
             st.write(f"{translate(item.lower())}: {currency_symbol}{round(cost)}")
-        st.write(f"{translate('local_transport')}: {currency_symbol}{local_transport_cost_per_container * containers}")
+        st.write(f"{translate('australia_local_transport')}: {currency_symbol}{australia_local_transport_cost_per_container * containers}")
         st.write(f"{translate('crane_costs')}: {currency_symbol}{crane_costs}")
     with st.expander(f"{translate('permit_costs')}: {currency_symbol}{costs['permit_cost']}"):
         for item, cost in costs['permit_cost_items'].items():
@@ -326,25 +329,27 @@ def display_cost_details(costs, option_label, sqm, containers, stumps):
 containers_1_bed = 1
 stumps_1_bed = 8
 costs_1_bed = calculate_costs("1 bed", sqm_1_bed, containers_1_bed, stumps_1_bed, profit_margin, overhead_percentage, contingency_percentage)
+image_path_1_bed = 'assets/option1_floor_plan.png'
 
 # 2 Bed Option
 containers_2_bed = 2
 stumps_2_bed = 16
 costs_2_bed = calculate_costs("2 bed", sqm_2_bed, containers_2_bed, stumps_2_bed, profit_margin, overhead_percentage, contingency_percentage)
+image_path_2_bed = 'assets/option2_floor_plan.png'
 
 # Display costs
 st.title(translate("title"))
 
 col1, col2 = st.columns(2)
 with col1:
-    display_cost_details(costs_1_bed, translate("1_bed_option"), sqm_1_bed, containers_1_bed, stumps_1_bed)
+    display_cost_details(costs_1_bed, translate("1_bed_option"), sqm_1_bed, containers_1_bed, image_path_1_bed)
 
 with col2:
-    display_cost_details(costs_2_bed, translate("2_bed_option"), sqm_2_bed, containers_2_bed, stumps_2_bed)
+    display_cost_details(costs_2_bed, translate("2_bed_option"), sqm_2_bed, containers_2_bed, image_path_2_bed)
 
 # Define colour map
 color_map = {
-    translate("Construction"): 'rgb(54, 162, 235)',  # Blue
+    translate("Manufacturing"): 'rgb(54, 162, 235)',  # Blue
     translate("Logistics"): 'rgb(255, 99, 132)',     # Red
     translate("Permit"): 'rgb(75, 192, 192)',        # Teal
     translate("Site Work"): 'rgb(153, 102, 255)',    # Purple
@@ -356,9 +361,9 @@ color_map = {
 
 # Prepare data for Plotly
 data = {
-    "Cost Type": [translate("Construction"), translate("Logistics"), translate("Permit"), translate("Site Work"), translate("overhead_cost"), translate("contingency_cost"), translate("Profit"), translate("gst")],
+    "Cost Type": [translate("Manufacturing"), translate("Logistics"), translate("Permit"), translate("Site Work"), translate("overhead_cost"), translate("contingency_cost"), translate("Profit"), translate("gst")],
     translate("1_bed_option"): [
-        costs_1_bed['construction_cost'],
+        costs_1_bed['manufacturing_costs'],
         costs_1_bed['logistics_cost'],
         costs_1_bed['permit_cost'],
         costs_1_bed['total_site_work_cost'],
@@ -368,7 +373,7 @@ data = {
         costs_1_bed['gst']
     ],
     translate("2_bed_option"): [
-        costs_2_bed['construction_cost'],
+        costs_2_bed['manufacturing_costs'],
         costs_2_bed['logistics_cost'],
         costs_2_bed['permit_cost'],
         costs_2_bed['total_site_work_cost'],
