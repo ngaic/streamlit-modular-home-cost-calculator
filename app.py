@@ -110,7 +110,10 @@ translations = {
         "overhead_cost": "Overhead",
         "contingency_cost": "Contingency",
         "price_breakdown": "Price Breakdown",
-        "Floor plan for": "Floor plan for"
+        "Floor plan for": "Floor plan for",
+        "Option": "Option",
+        "Cost": "Cost",
+        "Cost Type": "Cost Type"
     },
     "Simplified Chinese": {
         "language": "语言",
@@ -166,7 +169,10 @@ translations = {
         "overhead_cost": "管理费用",
         "contingency_cost": "应急费用",
         "price_breakdown": "总价分解",
-        "Floor plan for": "平面图为"
+        "Floor plan for": "平面图为",
+        "Option": "选项",
+        "Cost": "成本",
+        "Cost Type": "成本类别"
     },
 }
 
