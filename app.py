@@ -246,11 +246,14 @@ def calculate_costs(option, sqm, containers, stumps, target_profit_margin, overh
     manufacturing_costs = round(sqm * sqm_price)
     
     # Calculate logistics cost
-    # Ensure china_shipping_cost is not converted again
+    # Handle china_shipping_cost separately
     china_logistics_cost_items = {
-        key: (value if key == "china_shipping" else value * containers * (conversion_rate_AUD_to_CNY if language == "Simplified Chinese" else 1))
+        key: (value * containers if key != "china_shipping" else value) * (conversion_rate_AUD_to_CNY if language == "Simplified Chinese" else 1)
         for key, value in china_logistics_costs.items()
     }
+    # Add the china_shipping_cost separately, multiplied by the number of containers
+    china_logistics_cost_items["china_shipping"] = china_shipping_cost * containers
+    
     logistics_cost = round(sum(china_logistics_cost_items.values()) + australia_local_transport_cost_per_container * containers + crane_costs)
     
     # Get permit cost details and convert if necessary
