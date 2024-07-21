@@ -7,12 +7,18 @@ conversion_rate_CNY_to_AUD = 0.21  # Assuming 1 CNY = 0.21 AUD, adjust as needed
 conversion_rate_AUD_to_CNY = 1/conversion_rate_CNY_to_AUD
 sqm_price_CNY = 4500
 sqm_price_AUD = sqm_price_CNY * conversion_rate_CNY_to_AUD
+
+# Default value for china_shipping
+china_shipping_default_CNY = 75000
+china_shipping_default_AUD = china_shipping_default_CNY * conversion_rate_CNY_to_AUD
+
 china_logistics_costs = {
-    "china_shipping": 11920,
-    "china_transport": 780,
-    "china_security": 460,
-    "china_custom": 60,
-    "china_port_admin": 30,
+    # "china_shipping": 15433,
+    # "china_shipping": 11920,
+    # "china_transport": 780,
+    # "china_security": 460,
+    # "china_custom": 60,
+    # "china_port_admin": 30,
 }
 australia_local_transport_cost_per_container_default = 10000
 crane_costs_default = 12000
@@ -62,6 +68,7 @@ translations = {
         "title": "Modular Home Cost Evaluation",
         "price_per_sqm": "Price per Square Meter (in AUD)",
         "australia_local_transport_cost_per_container": "Local Transport Cost per Container",
+        "china_shipping": "China Shipping Cost",
         "profit_margin": "Profit Margin (%)",
         "overhead_percentage": "Overhead Percentage (%)",
         "contingency_percentage": "Contingency Percentage (%)",
@@ -73,7 +80,6 @@ translations = {
         "logistics_costs": "Logistics Costs",
         "permit_costs": "Permit Costs",
         "site_work_costs": "Site Work Costs",
-        "china_shipping": "China Shipping",
         "china_transport": "China Transport",
         "china_security": "China Security",
         "china_custom": "China custom",
@@ -120,6 +126,7 @@ translations = {
         "title": "模块化住宅成本评估",
         "price_per_sqm": "每平方米价格（人民币）",
         "australia_local_transport_cost_per_container": "每个集装箱的澳洲本地运输费用",
+        "china_shipping": "中国船运费用",
         "profit_margin": "利润率 (%)",
         "overhead_percentage": "管理费用百分比 (%)",
         "contingency_percentage": "应急费用百分比 (%)",
@@ -132,7 +139,6 @@ translations = {
         "logistics_costs": "物流成本",
         "permit_costs": "许可证费用",
         "site_work_costs": "现场工作成本",
-        "china_shipping": "中国船运",
         "china_transport": "中国陆运",
         "china_security": "中国安保",
         "china_custom": "中国海关",
@@ -176,7 +182,6 @@ translations = {
     },
 }
 
-
 # Default language setting
 current_language_key = "Simplified Chinese"  # Default to Chinese
 language = current_language_key  # Initialize the language variable
@@ -204,6 +209,7 @@ if language == "Simplified Chinese":
     civil_work_cost = round(civil_work_cost * conversion_rate_AUD_to_CNY)
     on_site_plumbing_connection = round(on_site_plumbing_connection * conversion_rate_AUD_to_CNY)
     on_site_electrical_connection = round(on_site_electrical_connection * conversion_rate_AUD_to_CNY)
+    china_shipping_cost = round(china_shipping_default_CNY)
     currency_symbol = "¥"
 else:
     sqm_price = round(sqm_price_AUD)
@@ -213,6 +219,7 @@ else:
     civil_work_cost = round(civil_work_cost)
     on_site_plumbing_connection = round(on_site_plumbing_connection)
     on_site_electrical_connection = round(on_site_electrical_connection)
+    china_shipping_cost = round(china_shipping_default_AUD)
     currency_symbol = "$"
 
 # Sidebar inputs
@@ -220,10 +227,10 @@ st.sidebar.title(translate("title"))
 
 # Input parameters
 sqm_price = st.sidebar.number_input(translate("price_per_sqm"), value=sqm_price)
+china_shipping_cost = st.sidebar.number_input(translate("china_shipping"), value=china_shipping_cost)
 # Size inputs
 sqm_1_bed = st.sidebar.number_input(translate("1_bed_size"), value=38)
 sqm_2_bed = st.sidebar.number_input(translate("2_bed_size"), value=58)
-
 
 australia_local_transport_cost_per_container = st.sidebar.number_input(translate("australia_local_transport_cost_per_container"), value=australia_local_transport_cost_per_container)
 crane_costs = st.sidebar.number_input(translate("crane_costs"), value=crane_costs)
@@ -231,6 +238,8 @@ profit_margin = st.sidebar.slider(translate("profit_margin"), value=round(profit
 overhead_percentage = st.sidebar.slider(translate("overhead_percentage"), value=round(overhead_percentage_default * 100)) / 100
 contingency_percentage = st.sidebar.slider(translate("contingency_percentage"), value=round(contingency_percentage_default * 100)) / 100
 
+# Update china_shipping cost in china_logistics_costs
+china_logistics_costs["china_shipping"] = china_shipping_cost
 
 def calculate_costs(option, sqm, containers, stumps, target_profit_margin, overhead_percentage, contingency_percentage):
     # Calculate manufacturing cost
