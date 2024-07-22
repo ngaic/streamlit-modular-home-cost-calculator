@@ -5,21 +5,16 @@ import plotly.express as px
 # Constants
 conversion_rate_CNY_to_AUD = 0.21  # Assuming 1 CNY = 0.21 AUD, adjust as needed
 conversion_rate_AUD_to_CNY = 1/conversion_rate_CNY_to_AUD
-sqm_price_CNY = 4500
+sqm_price_CNY = 6075
 sqm_price_AUD = sqm_price_CNY * conversion_rate_CNY_to_AUD
 
 # Default value for china_shipping
 china_shipping_default_CNY = 75000
 china_shipping_default_AUD = china_shipping_default_CNY * conversion_rate_CNY_to_AUD
 
-china_logistics_costs = {
-    # "china_shipping": 15433,
-    # "china_shipping": 11920,
-    # "china_transport": 780,
-    # "china_security": 460,
-    # "china_custom": 60,
-    # "china_port_admin": 30,
-}
+china_custom_default_CNY = 11000
+australia_custom_default_AUD = 5000
+
 australia_local_transport_cost_per_container_default = 10000
 crane_costs_default = 12000
 building_permit_costs = {
@@ -69,6 +64,8 @@ translations = {
         "price_per_sqm": "Price per Square Meter (in AUD)",
         "australia_local_transport_cost_per_container": "Local Transport Cost per Container",
         "china_shipping": "China Shipping Cost",
+        "china_custom": "China Custom Cost",
+        "australia_custom": "Australia Custom Cost",
         "profit_margin": "Profit Margin (%)",
         "overhead_percentage": "Overhead Percentage (%)",
         "contingency_percentage": "Contingency Percentage (%)",
@@ -82,8 +79,7 @@ translations = {
         "site_work_costs": "Site Work Costs",
         "china_transport": "China Transport",
         "china_security": "China Security",
-        "china_custom": "China custom",
-        "china_port_admin": "China port admin",
+        "china_port_admin": "China Port Admin",
         "australia_local_transport": "Australia Local Transport",
         "crane_costs": "Crane Costs",
         "permit_cost": "Permit Cost",
@@ -127,6 +123,8 @@ translations = {
         "price_per_sqm": "每平方米价格（人民币）",
         "australia_local_transport_cost_per_container": "每个集装箱的澳洲本地运输费用",
         "china_shipping": "中国船运费用",
+        "china_custom": "中国海关费用",
+        "australia_custom": "澳洲海关费用",
         "profit_margin": "利润率 (%)",
         "overhead_percentage": "管理费用百分比 (%)",
         "contingency_percentage": "应急费用百分比 (%)",
@@ -141,7 +139,6 @@ translations = {
         "site_work_costs": "现场工作成本",
         "china_transport": "中国陆运",
         "china_security": "中国安保",
-        "china_custom": "中国海关",
         "china_port_admin": "中国港口行政",
         "australia_local_transport": "澳洲本地运输",
         "crane_costs": "澳洲起重机费用",
@@ -210,6 +207,8 @@ if language == "Simplified Chinese":
     on_site_plumbing_connection = round(on_site_plumbing_connection * conversion_rate_AUD_to_CNY)
     on_site_electrical_connection = round(on_site_electrical_connection * conversion_rate_AUD_to_CNY)
     china_shipping_cost = round(china_shipping_default_CNY)
+    china_custom_cost = round(china_custom_default_CNY)
+    australia_custom_cost = round(australia_custom_default_AUD * conversion_rate_AUD_to_CNY)
     currency_symbol = "¥"
 else:
     sqm_price = round(sqm_price_AUD)
@@ -220,6 +219,8 @@ else:
     on_site_plumbing_connection = round(on_site_plumbing_connection)
     on_site_electrical_connection = round(on_site_electrical_connection)
     china_shipping_cost = round(china_shipping_default_AUD)
+    china_custom_cost = round(china_custom_default_CNY * conversion_rate_CNY_to_AUD)
+    australia_custom_cost = round(australia_custom_default_AUD)
     currency_symbol = "$"
 
 # Sidebar inputs
@@ -228,9 +229,13 @@ st.sidebar.title(translate("title"))
 # Input parameters
 sqm_price = st.sidebar.number_input(translate("price_per_sqm"), value=sqm_price)
 china_shipping_cost = st.sidebar.number_input(translate("china_shipping"), value=china_shipping_cost)
+# china_custom_cost = st.sidebar.number_input(translate("china_custom"), value=china_custom_cost)
+# australia_custom_cost = st.sidebar.number_input(translate("australia_custom"), value=australia_custom_cost)
+
 # Size inputs
 sqm_1_bed = st.sidebar.number_input(translate("1_bed_size"), value=38)
-sqm_2_bed = st.sidebar.number_input(translate("2_bed_size"), value=58)
+enable_2_bed_option = st.sidebar.checkbox(translate("2_bed_option"), value=False)
+sqm_2_bed = st.sidebar.number_input(translate("2_bed_size"), value=58, disabled=not enable_2_bed_option)
 
 australia_local_transport_cost_per_container = st.sidebar.number_input(translate("australia_local_transport_cost_per_container"), value=australia_local_transport_cost_per_container)
 crane_costs = st.sidebar.number_input(translate("crane_costs"), value=crane_costs)
@@ -238,23 +243,25 @@ profit_margin = st.sidebar.slider(translate("profit_margin"), value=round(profit
 overhead_percentage = st.sidebar.slider(translate("overhead_percentage"), value=round(overhead_percentage_default * 100)) / 100
 contingency_percentage = st.sidebar.slider(translate("contingency_percentage"), value=round(contingency_percentage_default * 100)) / 100
 
-# Update china_shipping cost in china_logistics_costs
-china_logistics_costs["china_shipping"] = china_shipping_cost
+# Update logistics costs
+china_logistics_costs = {
+    "china_shipping": china_shipping_cost,
+    "china_custom": china_custom_cost
+}
 
 def calculate_costs(option, sqm, containers, stumps, target_profit_margin, overhead_percentage, contingency_percentage):
     # Calculate manufacturing cost
     manufacturing_costs = round(sqm * sqm_price)
     
     # Calculate logistics cost
-    # Handle china_shipping_cost separately
     china_logistics_cost_items = {
-        key: (value * containers if key != "china_shipping" else value) * (conversion_rate_AUD_to_CNY if language == "Simplified Chinese" else 1)
+        key: value * containers if key != "china_shipping" else value
         for key, value in china_logistics_costs.items()
     }
     # Add the china_shipping_cost separately, multiplied by the number of containers
     china_logistics_cost_items["china_shipping"] = china_shipping_cost * containers
     
-    logistics_cost = round(sum(china_logistics_cost_items.values()) + australia_local_transport_cost_per_container * containers + crane_costs)
+    logistics_cost = round(sum(china_logistics_cost_items.values()) + australia_local_transport_cost_per_container * containers + crane_costs + australia_custom_cost)
     
     # Get permit cost details and convert if necessary
     permit_cost_details = building_permit_costs[option]
@@ -288,7 +295,7 @@ def calculate_costs(option, sqm, containers, stumps, target_profit_margin, overh
     total_cost_without_profit = round(manufacturing_costs + logistics_cost + permit_cost + total_site_work_cost + overhead_cost + contingency_cost)
     
     # Adjust profit calculation to ensure profit margin is applied correctly
-    profit = round(total_cost_without_profit * target_profit_margin / (1 - target_profit_margin))
+    profit = round(total_cost_without_profit * target_profit_margin)
     
     # Calculate total cost with profit
     total_cost_with_profit = round(total_cost_without_profit + profit)
@@ -331,6 +338,7 @@ def display_cost_details(costs, option_label, sqm, containers, image_path):
             st.write(f"{translate(item.lower())}: {currency_symbol}{round(cost)}")
         st.write(f"{translate('australia_local_transport')}: {currency_symbol}{australia_local_transport_cost_per_container * containers}")
         st.write(f"{translate('crane_costs')}: {currency_symbol}{crane_costs}")
+        st.write(f"{translate('australia_custom')}: {currency_symbol}{australia_custom_cost}")
     with st.expander(f"{translate('permit_costs')}: {currency_symbol}{costs['permit_cost']}"):
         for item, cost in costs['permit_cost_items'].items():
             st.write(f"{translate(item)}: {currency_symbol}{round(cost)}")
@@ -367,8 +375,9 @@ col1, col2 = st.columns(2)
 with col1:
     display_cost_details(costs_1_bed, translate("1_bed_option"), sqm_1_bed, containers_1_bed, image_path_1_bed)
 
-with col2:
-    display_cost_details(costs_2_bed, translate("2_bed_option"), sqm_2_bed, containers_2_bed, image_path_2_bed)
+if enable_2_bed_option:
+    with col2:
+        display_cost_details(costs_2_bed, translate("2_bed_option"), sqm_2_bed, containers_2_bed, image_path_2_bed)
 
 # Define colour map
 color_map = {
@@ -394,8 +403,12 @@ data = {
         costs_1_bed['contingency_cost'],
         costs_1_bed['profit'],
         costs_1_bed['gst']
-    ],
-    translate("2_bed_option"): [
+    ]
+}
+
+# Conditionally include the 2 bed option
+if enable_2_bed_option:
+    data[translate("2_bed_option")] = [
         costs_2_bed['manufacturing_costs'],
         costs_2_bed['logistics_cost'],
         costs_2_bed['permit_cost'],
@@ -404,8 +417,7 @@ data = {
         costs_2_bed['contingency_cost'],
         costs_2_bed['profit'],
         costs_2_bed['gst']
-    ],
-}
+    ]
 
 # Convert to DataFrame
 df = pd.DataFrame(data)
@@ -433,10 +445,12 @@ fig_1_bed = px.pie(df, names="Cost Type", values=translate("1_bed_option"),
                    color="Cost Type", color_discrete_map=color_map)
 
 # Pie chart for 2 Bed Option
-fig_2_bed = px.pie(df, names="Cost Type", values=translate("2_bed_option"), 
-                   title=f"{translate('2_bed_option')} ({sqm_2_bed} sqm) - {translate('price_breakdown')}",
-                   color="Cost Type", color_discrete_map=color_map)
+if enable_2_bed_option:
+    fig_2_bed = px.pie(df, names="Cost Type", values=translate("2_bed_option"), 
+                       title=f"{translate('2_bed_option')} ({sqm_2_bed} sqm) - {translate('price_breakdown')}",
+                       color="Cost Type", color_discrete_map=color_map)
 
-# Display the pie charts in Streamlit
+    # Display the pie charts in Streamlit
+    st.plotly_chart(fig_2_bed, use_container_width=True)
+
 st.plotly_chart(fig_1_bed, use_container_width=True)
-st.plotly_chart(fig_2_bed, use_container_width=True)
